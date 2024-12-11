@@ -1,0 +1,5 @@
+package bitkub
+
+func BuyBitCion() {
+
+}
