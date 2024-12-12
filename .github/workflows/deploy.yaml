@@ -3,7 +3,7 @@ name: Push Docker Image to GCR
 on:
   push:
     branches:
-      - main
+      - prod
       
 
 env:
