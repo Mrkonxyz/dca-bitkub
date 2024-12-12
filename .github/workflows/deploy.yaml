@@ -1,0 +1,42 @@
+name: Push Docker Image to GCR
+
+on:
+  push:
+    branches:
+      - prod
+      
+
+env:
+  PROJECT_ID: gon-web-service
+  IMAGE_NAME: mrkonz/dca-bitkub
+  IMAGE_TAG: latest
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: '${{ secrets.GCR_SERVICE_ACCOUNT_KEY }}'
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v1'
+
+      - name: Configure Docker to use the gcloud command-line tool
+        run: |
+          gcloud auth configure-docker
+          
+      - name: Configure Docker Client
+        run: |-
+          gcloud auth configure-docker --quiet
+          gcloud auth configure-docker asia-southeast1-docker.pkg.dev --quiet
+          
+      - name: Build and push Docker image
+        run: |
+          docker build --build-arg BASE_URL=${{ variables.BASE_URL }} API_KEY=${{ secrets.API_KEY }} API_SECRET=${{ secrets.API_SECRET }} -t asia-southeast1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} ./web/
+          docker push asia-southeast1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}

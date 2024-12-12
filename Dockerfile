@@ -1,22 +1,33 @@
-# Build the application from source
-FROM golang:1.21.3 AS build-stage
+# Stage 1: Build the Go binary
+FROM golang:1.21-alpine AS builder
 
+# Set the Current Working Directory inside the container
 WORKDIR /app
 
+# Copy the Go modules and download dependencies
 COPY go.mod go.sum ./
-RUN go mod download
+RUN go mod tidy
 
+# Copy the source code into the container
 COPY . .
 
-RUN go build -o /docker-gs-ping
+# Build the Go app
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o myapp .
 
-# Deploy the application binary into a lean image
-FROM gcr.io/distroless/base-debian11
+# Stage 2: Create a smaller image to run the app
+FROM alpine:latest
 
-WORKDIR /
+# Set the Current Working Directory inside the container
+WORKDIR /root/
+# Define the build argument
+ARG BASE_URL
 
-COPY --from=build-stage /docker-gs-ping /docker-gs-ping
-
+# Write the BASE_URL into an environment file
+RUN echo "BASE_URL=${BASE_URL}" > /root/app.env
+# Copy the Go binary from the builder stage
+COPY --from=builder /app/myapp .
+# Expose the port the app will run on
 EXPOSE 8080
 
-ENTRYPOINT ["/docker-gs-ping"]
+# Command to run the Go binary
+CMD ["./myapp"]
