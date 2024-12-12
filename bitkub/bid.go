@@ -21,11 +21,11 @@ type BuyBitCionRequest struct {
 	PostOnly  bool    `json:"post_only"`
 }
 
-func (bk *Bitkub) BuyBitCion() (response model.Response, err error) {
+func (bk *Bitkub) BuyBitCion(amount float64) (response model.Response, err error) {
 	path := "/api/v3/market/place-bid"
 	body := BuyBitCionRequest{
 		Symbol:    "btc_thb",
-		Amount:    10,
+		Amount:    amount,
 		Rate:      0,
 		OrderType: "market",
 	}
