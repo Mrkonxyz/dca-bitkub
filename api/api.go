@@ -3,6 +3,7 @@ package api
 import (
 	"Mrkonxyz/github.com/config"
 	"Mrkonxyz/github.com/model"
+	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
@@ -53,12 +54,16 @@ func (a *ApiService) ReadResponse(r io.Reader) []byte {
 	}
 	return body
 }
-func (a *ApiService) Post(path string) (response model.Response) {
+func (a *ApiService) Post(path string, b *bytes.Buffer) (response model.Response) {
 	ts := a.getTimestamp()
 	url := a.Cfg.BaseUrl + path
 
 	// Create a new GET request
-	req, err := http.NewRequest("POST", url, nil)
+	var body1 io.Reader = nil
+	if b != nil {
+		body1 = b
+	}
+	req, err := http.NewRequest("POST", url, body1)
 	if err != nil {
 		log.Fatalf("Error creating request: %v", err)
 	}
@@ -67,8 +72,10 @@ func (a *ApiService) Post(path string) (response model.Response) {
 	payload = append(payload, ts)
 	payload = append(payload, "POST")
 	payload = append(payload, path)
+	if b != nil {
+		payload = append(payload, b.String())
+	}
 	payloadStr := strings.Join(payload, "")
-
 	sig := a.genSign(a.Cfg.ApiSecret, payloadStr)
 	// Optionally set headers
 	req.Header.Set("Content-Type", "application/json")

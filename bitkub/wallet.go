@@ -7,5 +7,5 @@ import (
 func (bk *Bitkub) GetWallet() (response model.Response) {
 	path := "/api/v3/market/wallet"
 
-	return bk.ApiService.Post(path)
+	return bk.ApiService.Post(path, nil)
 }
