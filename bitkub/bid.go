@@ -33,6 +33,6 @@ func (bk *Bitkub) BuyBitCion(amount float64) (response model.Response, err error
 	if err != nil {
 		return
 	}
-	response = bk.ApiService.Post(path, bytes.NewBuffer(jsonData))
+	response, err = bk.ApiService.Post(path, bytes.NewBuffer(jsonData))
 	return
 }

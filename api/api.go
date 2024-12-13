@@ -54,7 +54,7 @@ func (a *ApiService) ReadResponse(r io.Reader) []byte {
 	}
 	return body
 }
-func (a *ApiService) Post(path string, b *bytes.Buffer) (response model.Response) {
+func (a *ApiService) Post(path string, b *bytes.Buffer) (response model.Response, err error) {
 	ts := a.getTimestamp()
 	url := a.Cfg.BaseUrl + path
 
@@ -65,7 +65,7 @@ func (a *ApiService) Post(path string, b *bytes.Buffer) (response model.Response
 	}
 	req, err := http.NewRequest("POST", url, body1)
 	if err != nil {
-		log.Fatalf("Error creating request: %v", err)
+		log.Printf("Error creating request: %v \n", err)
 	}
 
 	var payload []string
@@ -97,12 +97,12 @@ func (a *ApiService) Post(path string, b *bytes.Buffer) (response model.Response
 
 	// Check the status code
 	if resp.StatusCode != http.StatusOK {
-		log.Fatalf("Unexpected status code: %d, response: %s", resp.StatusCode, string(body))
+		log.Printf("Unexpected status code: %d, response: %s\n", resp.StatusCode, string(body))
 	}
 
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		log.Fatalf("Error Unmarshal: %v", err)
+		log.Printf("Error Unmarshal: %v\n", err)
 	}
-	return response
+	return
 }

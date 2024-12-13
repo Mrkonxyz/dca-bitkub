@@ -19,7 +19,7 @@ func (h *Handler) Health(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "service up."})
 }
 func (h *Handler) GetWallet(c *gin.Context) {
-	res := h.Service.GetWallet()
+	res, _ := h.Service.GetWallet()
 	wallet := make(map[string]float64)
 	for k, v := range res.Result {
 		if val, ok := v.(float64); ok {
