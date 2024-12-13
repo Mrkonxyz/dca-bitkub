@@ -34,6 +34,9 @@ func (h *Handler) GetWallet(c *gin.Context) {
 }
 
 func (h *Handler) BuyBitCion(c *gin.Context) {
-	res, _ := h.Service.BuyBitCion(200)
+	res, err := h.Service.BuyBitCion(200)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+	}
 	c.JSON(http.StatusOK, res)
 }
