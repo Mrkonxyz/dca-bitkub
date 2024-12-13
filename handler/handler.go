@@ -2,8 +2,9 @@ package handler
 
 import (
 	"Mrkonxyz/github.com/bitkub"
-	"encoding/json"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
@@ -13,7 +14,11 @@ type Handler struct {
 func NewHandler(service *bitkub.Bitkub) *Handler {
 	return &Handler{Service: *service}
 }
-func (h *Handler) GetWallet(w http.ResponseWriter, r *http.Request) {
+
+func (h *Handler) Health(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "service up."})
+}
+func (h *Handler) GetWallet(c *gin.Context) {
 	res := h.Service.GetWallet()
 	wallet := make(map[string]float64)
 	for k, v := range res.Result {
@@ -24,10 +29,11 @@ func (h *Handler) GetWallet(w http.ResponseWriter, r *http.Request) {
 		}
 
 	}
-	json.NewEncoder(w).Encode(wallet)
+
+	c.JSON(http.StatusOK, wallet)
 }
 
-func (h *Handler) BuyBitCion(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) BuyBitCion(c *gin.Context) {
 	res, _ := h.Service.BuyBitCion(200)
-	json.NewEncoder(w).Encode(res)
+	c.JSON(http.StatusOK, res)
 }

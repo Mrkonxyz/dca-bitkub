@@ -5,7 +5,8 @@ import (
 	"Mrkonxyz/github.com/bitkub"
 	"Mrkonxyz/github.com/config"
 	"Mrkonxyz/github.com/handler"
-	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -13,7 +14,9 @@ func main() {
 	apiService := api.NewApiService(&cfg)
 	bk := bitkub.NewBitkubService(apiService)
 	h := handler.NewHandler(bk)
-	http.HandleFunc("/wallet", h.GetWallet)
-	http.HandleFunc("/dca-btc", h.BuyBitCion)
-	http.ListenAndServe(":8080", nil)
+	r := gin.Default()
+	r.GET("/", h.Health)
+	r.GET("/wallet", h.GetWallet)
+	r.POST("/dca-btc", h.BuyBitCion)
+	r.Run()
 }
