@@ -1,29 +1,19 @@
 package main
 
 import (
+	"Mrkonxyz/github.com/api"
+	"Mrkonxyz/github.com/bitkub"
 	"Mrkonxyz/github.com/config"
-	"fmt"
-	"time"
+	"Mrkonxyz/github.com/handler"
+	"net/http"
 )
 
 func main() {
 	cfg := config.LoadConfig(".")
-
-	// apiService := api.NewApiService(&cfg)
-	for {
-		fmt.Printf("cfg.BaseUrl: %v\n", cfg.BaseUrl)
-		time.Sleep(2 * time.Second)
-	}
-	// bk := bitkub.NewBitkubService(apiService)
-
-	// res := bk.GetWallet()
-	// wallet := make(map[string]float64)
-	// for k, v := range res.Result {
-	// 	if v > 0 {
-	// 		wallet[k] = v
-	// 	}
-	// }
-
-	// fmt.Printf("wallet: %v\n", wallet)
-
+	apiService := api.NewApiService(&cfg)
+	bk := bitkub.NewBitkubService(apiService)
+	h := handler.NewHandler(bk)
+	http.HandleFunc("/wallet", h.GetWallet)
+	http.HandleFunc("/dca-btc", h.BuyBitCion)
+	http.ListenAndServe(":8080", nil)
 }
