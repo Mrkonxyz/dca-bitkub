@@ -15,8 +15,6 @@ func main() {
 	bk := bitkub.NewBitkubService(apiService)
 	h := handler.NewHandler(bk)
 	r := gin.Default()
-	r.GET("/", h.Health)
-	r.GET("/wallet", h.GetWallet)
-	r.POST("/dca-btc", h.BuyBitCion)
+	r.GET("/", h.BuyBitCion)
 	r.Run()
 }
