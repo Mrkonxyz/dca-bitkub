@@ -1,6 +1,8 @@
 package config
 
 import (
+	"log"
+
 	"github.com/spf13/viper"
 )
 
@@ -25,4 +27,18 @@ func LoadConfig(path string) (config Config) {
 	viper.Unmarshal(&config)
 	AppConfig = config
 	return AppConfig
+}
+
+func (cfg *Config) Validate() {
+	if cfg.ApiKey == "" {
+		log.Fatal("Error: Missing ApiKey environment variable")
+	}
+
+	if cfg.ApiSecret == "" {
+		log.Fatal("Error: Missing ApiSecret environment variable")
+	}
+
+	if cfg.BaseUrl == "" {
+		log.Fatal("Error: Missing BaseUrl environment variable")
+	}
 }

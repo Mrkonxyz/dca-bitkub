@@ -21,9 +21,12 @@ FROM alpine:latest
 WORKDIR /root/
 # Define the build argument
 ARG BASE_URL
+ARG API_KEY
+ARG API_SECRET
 
-# Write the BASE_URL into an environment file
-RUN echo "BASE_URL=${BASE_URL}" > /root/app.env
+# Write the environment variables to a single file
+RUN echo "BASE_URL=${BASE_URL}\nAPI_KEY=${API_KEY}\nAPI_SECRET=${API_SECRET}" > /root/app.env
+
 # Copy the Go binary from the builder stage
 COPY --from=builder /app/myapp .
 # Expose the port the app will run on
