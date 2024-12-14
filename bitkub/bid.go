@@ -1,7 +1,6 @@
 package bitkub
 
 import (
-	"Mrkonxyz/github.com/model"
 	"bytes"
 	"encoding/json"
 )
@@ -21,7 +20,25 @@ type BuyBitCionRequest struct {
 	PostOnly  bool    `json:"post_only"`
 }
 
-func (bk *Bitkub) BuyBitCion(amount float64) (response model.Response, err error) {
+type BuyBitCionResponse struct {
+	Error  int    `json:"error"`
+	Result Result `json:"result"`
+}
+
+type Result struct {
+	ID       string  `json:"id"`   // order id
+	Hash     string  `json:"hash"` // order hash
+	Typ      string  `json:"typ"`  // order type
+	Amt      float64 `json:"amt"`  // spending amount
+	Rat      float64 `json:"rat"`  // rate
+	Fee      float64 `json:"fee"`  // fee
+	Cre      float64 `json:"cre"`  // fee credit used
+	Rec      float64 `json:"rec"`  // amount to receive
+	Ts       string  `json:"ts"`   // timestamp
+	ClientID string  `json:"ci"`   // input id for reference
+}
+
+func (bk *Bitkub) BuyBitCion(amount float64) (response *BuyBitCionResponse, err error) {
 	path := "/api/v3/market/place-bid"
 	body := BuyBitCionRequest{
 		Symbol:    "btc_thb",
@@ -31,8 +48,16 @@ func (bk *Bitkub) BuyBitCion(amount float64) (response model.Response, err error
 	}
 	jsonData, err := json.Marshal(body)
 	if err != nil {
-		return
+		return nil, err
 	}
-	response, err = bk.ApiService.Post(path, bytes.NewBuffer(jsonData))
-	return
+	res, err := bk.ApiService.PostWithSig(path, bytes.NewBuffer(jsonData))
+
+	if err != nil {
+		return nil, err
+	}
+
+	if err = json.Unmarshal(res, &response); err != nil {
+		return nil, err
+	}
+	return response, nil
 }

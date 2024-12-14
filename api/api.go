@@ -2,12 +2,10 @@ package api
 
 import (
 	"Mrkonxyz/github.com/config"
-	"Mrkonxyz/github.com/model"
 	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -44,8 +42,14 @@ func (a *ApiService) getTimestamp() string {
 	res := a.ReadResponse(req.Body)
 	return string(res)
 }
-func (a *ApiService) Get() {
+func (a *ApiService) Get(url string) ([]byte, error) {
+	req, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	res := a.ReadResponse(req.Body)
 
+	return res, nil
 }
 func (a *ApiService) ReadResponse(r io.Reader) []byte {
 	body, err := io.ReadAll(r)
@@ -54,7 +58,28 @@ func (a *ApiService) ReadResponse(r io.Reader) []byte {
 	}
 	return body
 }
-func (a *ApiService) Post(path string, b *bytes.Buffer) (response model.Response, err error) {
+
+func (a *ApiService) Post(url string, body *bytes.Buffer) (res []byte, err error) {
+	req, err := http.NewRequest("POST", url, body)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	if err != nil {
+		return
+	}
+	client := &http.Client{}
+
+	response, err := client.Do(req)
+
+	if err != nil {
+		return
+	}
+
+	defer response.Body.Close()
+
+	return a.ReadResponse(response.Body), nil
+}
+
+func (a *ApiService) PostWithSig(path string, b *bytes.Buffer) (response []byte, err error) {
 	ts := a.getTimestamp()
 	url := a.Cfg.BaseUrl + path
 
@@ -94,15 +119,10 @@ func (a *ApiService) Post(path string, b *bytes.Buffer) (response model.Response
 
 	// Read the response body
 	body := a.ReadResponse(resp.Body)
-
 	// Check the status code
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Unexpected status code: %d, response: %s\n", resp.StatusCode, string(body))
 	}
 
-	err = json.Unmarshal(body, &response)
-	if err != nil {
-		log.Printf("Error Unmarshal: %v\n", err)
-	}
-	return
+	return body, nil
 }
