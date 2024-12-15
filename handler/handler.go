@@ -5,6 +5,7 @@ import (
 	"Mrkonxyz/github.com/discord"
 	"Mrkonxyz/github.com/util"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -58,17 +59,18 @@ func getDay() (string, error) {
 func (h *Handler) BuyBitCion(c *gin.Context) {
 	today, err := getDay()
 	if err != nil {
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 	var req BuyBitCionRequest
 	if err := c.BindJSON(&req); err != nil {
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 
 	buyRes, err := h.BkService.BuyBitCion(req.Amount)
-	fmt.Printf("buyRes: %v\n", buyRes)
 	if buyRes.Error != 0 || err != nil {
 		errorMessage, exists := util.ErrorMessages[buyRes.Error]
 		if !exists {
@@ -86,15 +88,17 @@ func (h *Handler) BuyBitCion(c *gin.Context) {
 			today, buyRes.Error, errorMessage)
 
 		if _, err = h.DsService.SentMessage(message); err != nil {
+			log.Println(err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			return
 		}
-
+		log.Println(errorMessage)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": errorMessage})
 		return
 	}
 	res, err := h.BkService.BtcPrice()
 	if err != nil {
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -112,6 +116,7 @@ func (h *Handler) BuyBitCion(c *gin.Context) {
 	_, err = h.DsService.SentMessage(message)
 
 	if err != nil {
+		log.Println(err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
