@@ -37,17 +37,30 @@ type BuyBitCionRequest struct {
 	Amount float64 `json:"amount"`
 }
 
-func getDay() string {
+func getDay() (string, error) {
+	// Load the Bangkok timezone
+	bangkokTimeZone := time.FixedZone("UTC+7", 7*60*60)
 
 	// Get the current time in the Bangkok timezone
-	currentTime := time.Now().Format("2006-01-02 15:04:05")
+	currentTime := time.Now().In(bangkokTimeZone)
 
-	return currentTime
+	// Format the date in Thai language
+	// Note: The `January` and `Monday` values will remain in English without additional localization libraries.
+	// We'll use numeric formatting here.
+	year := currentTime.Year() + 543 // Convert AD to BE
+	month := currentTime.Month()
+	day := currentTime.Day()
+
+	// Log the date in Thai format
+	return fmt.Sprintf("วันที่ %d เดือน %d พ.ศ. %d เวลา %d:%d\n", day, month, year, currentTime.Hour(), currentTime.Minute()), nil
 }
 
 func (h *Handler) BuyBitCion(c *gin.Context) {
-	today := getDay()
-
+	today, err := getDay()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
 	var req BuyBitCionRequest
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
