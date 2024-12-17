@@ -20,7 +20,7 @@ func main() {
 
 	r := gin.Default()
 	r.GET("/", h.Health)
-	r.GET("/wallet", h.GetBTC)
-	r.POST("/dca-bitcoin", h.BuyBitCion)
+	r.GET("/test", h.GetWallet)
+	r.POST("/dca-bitcoin", h.DcaBTC)
 	r.Run()
 }

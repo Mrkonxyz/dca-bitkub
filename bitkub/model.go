@@ -1,10 +1,5 @@
 package bitkub
 
-import (
-	"bytes"
-	"encoding/json"
-)
-
 // sym string The symbol you want to trade (e.g. btc_thb).
 // amt float Amount you want to spend with no trailing zero (e.g. 1000.00 is invalid, 1000 is ok)
 // rat float Rate you want for the order with no trailing zero (e.g. 1000.00 is invalid, 1000 is ok)
@@ -38,26 +33,22 @@ type Result struct {
 	ClientID string  `json:"ci"`   // input id for reference
 }
 
-func (bk *Bitkub) BuyBitCion(amount float64) (response *BuyBitCionResponse, err error) {
-	path := "/api/v3/market/place-bid"
-	body := BuyBitCionRequest{
-		Symbol:    "btc_thb",
-		Amount:    amount,
-		Rate:      0,
-		OrderType: "market",
-	}
-	jsonData, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	res, err := bk.ApiService.PostWithSig(path, bytes.NewBuffer(jsonData))
+type MarketData struct {
+	Markets map[string]MarketDetails `json:"-"` // Map key corresponds to THB_1INCH, THB_AAVE, etc.
+}
 
-	if err != nil {
-		return nil, err
-	}
-
-	if err = json.Unmarshal(res, &response); err != nil {
-		return nil, err
-	}
-	return response, nil
+type MarketDetails struct {
+	ID            int     `json:"id"`
+	Last          float64 `json:"last"`
+	LowestAsk     float64 `json:"lowestAsk"`
+	HighestBid    float64 `json:"highestBid"`
+	PercentChange float64 `json:"percentChange"`
+	BaseVolume    float64 `json:"baseVolume"`
+	QuoteVolume   float64 `json:"quoteVolume"`
+	IsFrozen      int     `json:"isFrozen"`
+	High24Hr      float64 `json:"high24hr"`
+	Low24Hr       float64 `json:"low24hr"`
+	Change        float64 `json:"change"`
+	PrevClose     float64 `json:"prevClose"`
+	PrevOpen      float64 `json:"prevOpen"`
 }

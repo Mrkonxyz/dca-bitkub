@@ -39,7 +39,7 @@ func (a *ApiService) getTimestamp() string {
 	if err != nil {
 		log.Fatalf("Error making HTTP request: %v", err)
 	}
-	res := a.ReadResponse(req.Body)
+	res := a.readResponse(req.Body)
 	return string(res)
 }
 func (a *ApiService) Get(url string) ([]byte, error) {
@@ -47,11 +47,11 @@ func (a *ApiService) Get(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := a.ReadResponse(req.Body)
+	res := a.readResponse(req.Body)
 
 	return res, nil
 }
-func (a *ApiService) ReadResponse(r io.Reader) []byte {
+func (a *ApiService) readResponse(r io.Reader) []byte {
 	body, err := io.ReadAll(r)
 	if err != nil {
 		log.Fatalf("Error reading response body: %v", err)
@@ -76,7 +76,7 @@ func (a *ApiService) Post(url string, body *bytes.Buffer) (res []byte, err error
 
 	defer response.Body.Close()
 
-	return a.ReadResponse(response.Body), nil
+	return a.readResponse(response.Body), nil
 }
 
 func (a *ApiService) PostWithSig(path string, b *bytes.Buffer) (response []byte, err error) {
@@ -118,7 +118,7 @@ func (a *ApiService) PostWithSig(path string, b *bytes.Buffer) (response []byte,
 	defer resp.Body.Close()
 
 	// Read the response body
-	body := a.ReadResponse(resp.Body)
+	body := a.readResponse(resp.Body)
 	// Check the status code
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Unexpected status code: %d, response: %s\n", resp.StatusCode, string(body))
