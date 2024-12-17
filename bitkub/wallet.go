@@ -1,6 +1,7 @@
 package bitkub
 
 import (
+	"Mrkonxyz/github.com/util"
 	"encoding/json"
 	"math"
 )
@@ -13,7 +14,7 @@ type WalletResponse struct {
 type GeWalletResponse struct {
 	Symbol    string  `json:"symbol"`
 	Amount    float64 `json:"Amount"`
-	AmountTHB float64 `json:"AmountTHB"`
+	AmountTHB string  `json:"AmountTHB"`
 }
 
 func (bk *Bitkub) RoundToTwoDecimals(value float64) float64 {
@@ -35,11 +36,16 @@ func (bk *Bitkub) GetWallet() (response []GeWalletResponse, err error) {
 	for k, v := range temp.Result {
 		if v > 0 {
 			price := prices["THB_"+k]
-
+			var toThb string
+			if price.Last == 0 {
+				toThb = util.FormatMoney(v)
+			} else {
+				toThb = util.FormatMoney(v * price.Last)
+			}
 			response = append(response, GeWalletResponse{
 				Symbol:    k,
 				Amount:    v,
-				AmountTHB: bk.RoundToTwoDecimals(v * price.Last),
+				AmountTHB: toThb,
 			})
 		}
 	}

@@ -95,11 +95,11 @@ func (h *Handler) DcaBTC(c *gin.Context) {
 		# =====================
 		# %s
 		# 🚀 **แจ้งเตือนการซื้อ BTC**
-		# ที่ราคา %.2fบาท
-		# จำนวนเงิน %.2fบาท
+		# ที่ราคา %sบาท
+		# จำนวนเงิน %sบาท
 		# =====================
 		`,
-		today, res["THB_BTC"].Last, req.Amount)
+		today, util.FormatMoney(res["THB_BTC"].Last), util.FormatMoney(req.Amount))
 
 	_, err = h.DsService.SentMessage(message)
 
