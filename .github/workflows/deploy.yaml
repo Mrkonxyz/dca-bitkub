@@ -38,5 +38,5 @@ jobs:
           
       - name: Build and push Docker image
         run: |
-          docker build -t asia-southeast1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} --build-arg BASE_URL=${{ vars.BASE_URL }} --build-arg API_KEY=${{ secrets.API_KEY }} --build-arg API_SECRET=${{ secrets.API_SECRET }} .
+          docker build -t asia-southeast1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} --build-arg BASE_URL=${{ vars.BASE_URL }} --build-arg API_KEY=${{ secrets.API_KEY }} --build-arg API_SECRET=${{ secrets.API_SECRET }} --build-arg SECRET=${{ secrets.SECRET }} --build-arg DISCORD_HOOK=${{ secrets.DISCORD_HOOK }} .
           docker push asia-southeast1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
