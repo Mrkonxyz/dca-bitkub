@@ -24,7 +24,7 @@ func main() {
 	r.GET("/", h.Health)
 	protected := r.Group("")
 	protected.Use(middlewere.AuthMiddleware(cfg))
-	protected.GET("/test", h.GetWallet)
+	protected.GET("/wallet", h.GetWallet)
 	protected.POST("/dca-bitcoin", h.DcaBTC)
 	r.Run()
 }
