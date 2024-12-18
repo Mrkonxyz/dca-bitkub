@@ -1,6 +1,7 @@
 package middlewere
 
 import (
+	"log"
 	"net/http"
 	"strings"
 
@@ -17,6 +18,7 @@ func AuthMiddleware(cfg config.Config) gin.HandlerFunc {
 		// Get the Authorization header
 		tokenString := c.GetHeader("Authorization")
 		if tokenString == "" || !strings.HasPrefix(tokenString, "Bearer ") {
+			log.Println("No Bearer token")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header missing or invalid"})
 			c.Abort()
 			return
@@ -29,6 +31,7 @@ func AuthMiddleware(cfg config.Config) gin.HandlerFunc {
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			// Ensure the signing method is correct
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				log.Println("unexpected signing method")
 				return nil, jwt.NewValidationError("unexpected signing method", jwt.ValidationErrorSignatureInvalid)
 			}
 			return secretKey, nil
@@ -36,6 +39,7 @@ func AuthMiddleware(cfg config.Config) gin.HandlerFunc {
 
 		// Handle parsing errors or invalid tokens
 		if err != nil || !token.Valid {
+			log.Println("Invalid token")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			c.Abort()
 			return
