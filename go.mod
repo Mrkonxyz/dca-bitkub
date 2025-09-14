@@ -1,6 +1,6 @@
 module Mrkonxyz/github.com
 
-go 1.23.0
+go 1.24.7
 
 require github.com/golang-jwt/jwt v3.2.2+incompatible
 

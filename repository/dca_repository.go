@@ -2,10 +2,12 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
 	"Mrkonxyz/github.com/model"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -36,4 +38,25 @@ func (r *DcaRepository) FindAll(ctx context.Context) ([]model.Dca, error) {
 		return nil, err
 	}
 	return dcas, nil
+}
+
+func (r *DcaRepository) Delete(ctx context.Context, id string) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	res, err := r.col.DeleteOne(ctx, bson.M{"_id": objectID})
+	if err != nil {
+		return err
+	}
+	if res.DeletedCount == 0 {
+		return fmt.Errorf("no document found with id %v", id)
+	}
+	return nil
+}
+
+func (r *DcaRepository) Update(ctx context.Context, d model.Dca) error {
+	_, err := r.col.UpdateOne(ctx, bson.M{"_id": d.ID}, bson.M{"$set": d})
+	return err
 }

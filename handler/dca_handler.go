@@ -33,40 +33,69 @@ func (h *DcaHandler) CreateDca(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create dca"})
 		return
 	}
-	c.JSON(http.StatusCreated, req)
+	c.JSON(http.StatusCreated, gin.H{"message": "dca created successfully"})
 }
 
-func (h *DcaHandler) GetDca(c *gin.Context) {
+func (h *DcaHandler) GetAll(c *gin.Context) {
 	dcas, err := h.service.GetDca(c)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch dca"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, dcas)
 }
 
+func (h *DcaHandler) RemoveDca(c *gin.Context) {
+	id := c.Param("id")
+	log.Println("Delete DCA ID:", id)
+	if err := h.service.RemoveDca(c, id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "dca deleted successfully"})
+}
+
+func (h *DcaHandler) UpdateDca(c *gin.Context) {
+	var req model.Dca
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.service.UpdateDca(c, req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update dca"})
+		return
+	}
+	c.JSON(http.StatusOK, req)
+}
+
 func (h *DcaHandler) Trigger(c *gin.Context) {
 	today, err := getDay()
 	if err != nil {
-		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 	var req model.DcaRequest
 	if err := c.BindJSON(&req); err != nil {
-		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 
-	buyRes, err := h.BkService.BuyBitCion(req.Amount)
-	if buyRes.Error != 0 || err != nil {
-		errorMessage, exists := utils.ErrorMessages[buyRes.Error]
-		if !exists {
-			errorMessage = err.Error()
-		}
-		message := fmt.Sprintf(
-			`
+	dca, err := h.service.GetDca(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	for _, v := range dca {
+		buyRes, err := h.BkService.BuyCrypto(v.Amount, v.Symbol)
+		if buyRes.Error != 0 || err != nil {
+			errorMessage, exists := utils.ErrorMessages[buyRes.Error]
+			if !exists {
+				errorMessage = err.Error()
+			}
+			message := fmt.Sprintf(
+				`
 		# =====================
 		# %s
 		# 🚀 **แจ้งเตือนการซื้อ BTC ไม่สำเร็จ**
@@ -74,25 +103,25 @@ func (h *DcaHandler) Trigger(c *gin.Context) {
 		# Reason: %s
 		# =====================
 		`,
-			today, buyRes.Error, errorMessage)
+				today, buyRes.Error, errorMessage)
 
-		if _, err = h.DsService.SentMessage(message); err != nil {
+			if _, err = h.DsService.SentMessage(message); err != nil {
+				log.Println(err.Error())
+				c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+				return
+			}
+			log.Println(errorMessage)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": errorMessage})
+			return
+		}
+		res, err := h.BkService.GetPrice("THB_BTC")
+		if err != nil {
 			log.Println(err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			return
 		}
-		log.Println(errorMessage)
-		c.JSON(http.StatusInternalServerError, gin.H{"message": errorMessage})
-		return
-	}
-	res, err := h.BkService.GetPrice("THB_BTC")
-	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		return
-	}
-	message := fmt.Sprintf(
-		`
+		message := fmt.Sprintf(
+			`
 		# =====================
 		# %s
 		# 🚀 **แจ้งเตือนการซื้อ BTC**
@@ -100,14 +129,15 @@ func (h *DcaHandler) Trigger(c *gin.Context) {
 		# จำนวนเงิน %sบาท
 		# =====================
 		`,
-		today, utils.FormatMoney(res["THB_BTC"].Last), utils.FormatMoney(req.Amount))
+			today, utils.FormatMoney(res["THB_BTC"].Last), utils.FormatMoney(req.Amount))
 
-	_, err = h.DsService.SentMessage(message)
+		_, err = h.DsService.SentMessage(message)
 
-	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		return
+		if err != nil {
+			log.Println(err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "DCA BTC success ✅"})

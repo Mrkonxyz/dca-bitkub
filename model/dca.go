@@ -1,13 +1,15 @@
 package model
 
+import "go.mongodb.org/mongo-driver/bson/primitive"
+
 type Dca struct {
-	ID     string  `json:"id" bson:"_id,unique"`
-	UserID string  `json:"user_id" bson:"user_id"`
-	Amount float64 `json:"amount" bson:"amount"`
-	Symbol string  `json:"symbol" bson:"symbol"`
+	ID     primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	UserID string             `json:"user_id" bson:"user_id"`
+	Amount float64            `json:"amount" bson:"amount"`
+	Symbol string             `json:"symbol" bson:"symbol"`
 }
 
-type BuyBitCionRequest struct {
+type BuyCryptoRequest struct {
 	Symbol    string  `json:"sym"`
 	Amount    float64 `json:"amt"`
 	Rate      float64 `json:"rat"`
@@ -16,7 +18,7 @@ type BuyBitCionRequest struct {
 	PostOnly  bool    `json:"post_only"`
 }
 
-type BuyBitCionResponse struct {
+type BuyCryptoResponse struct {
 	Error  int    `json:"error"`
 	Result Result `json:"result"`
 }

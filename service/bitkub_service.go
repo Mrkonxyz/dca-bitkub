@@ -18,10 +18,10 @@ func NewBitKubService(apiService *utils.ApiService) *BitKubService {
 	}
 }
 
-func (bk *BitKubService) BuyBitCion(amount float64) (response *model.BuyBitCionResponse, err error) {
+func (bk *BitKubService) BuyCrypto(amount float64, symbol string) (response *model.BuyCryptoResponse, err error) {
 	path := "/api/v3/market/place-bid"
-	body := model.BuyBitCionRequest{
-		Symbol:    "btc_thb",
+	body := model.BuyCryptoRequest{
+		Symbol:    symbol,
 		Amount:    amount,
 		Rate:      0,
 		OrderType: "market",
