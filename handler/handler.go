@@ -3,6 +3,7 @@ package handler
 import (
 	"Mrkonxyz/github.com/bitkub"
 	"Mrkonxyz/github.com/discord"
+	"Mrkonxyz/github.com/service"
 	"Mrkonxyz/github.com/util"
 	"fmt"
 	"log"
@@ -15,10 +16,11 @@ import (
 type Handler struct {
 	BkService *bitkub.Bitkub
 	DsService *discord.Discord
+	Service   *service.Service
 }
 
-func NewHandler(bkService *bitkub.Bitkub, dsService *discord.Discord) *Handler {
-	return &Handler{BkService: bkService, DsService: dsService}
+func NewHandler(bkService *bitkub.Bitkub, dsService *discord.Discord, service *service.Service) *Handler {
+	return &Handler{BkService: bkService, DsService: dsService, Service: service}
 }
 
 func (h *Handler) Health(c *gin.Context) {

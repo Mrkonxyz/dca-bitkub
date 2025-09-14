@@ -14,6 +14,7 @@ type Config struct {
 	ApiSecret   string `mapstructure:"API_SECRET"`
 	BaseUrl     string `mapstructure:"BASE_URL"`
 	DiscordHook string `mapstructure:"DISCORD_HOOK"`
+	MongoUrl    string `mapstructure:"MONGO_URL"`
 }
 
 func LoadConfig(path string) (config Config) {
@@ -22,6 +23,8 @@ func LoadConfig(path string) (config Config) {
 	viper.SetDefault("BASE_URL", "")
 	viper.SetDefault("SECRET", "")
 	viper.SetDefault("DISCORD_HOOK", "")
+	viper.SetDefault("MONGO_URL", "")
+	viper.SetDefault("GIN_MODE", "release")
 
 	viper.AddConfigPath(path)
 	viper.SetConfigName("app")
@@ -52,5 +55,9 @@ func (cfg *Config) Validate() {
 
 	if cfg.Secret == "" {
 		log.Fatal("Error: Missing SECRET environment variable")
+	}
+
+	if cfg.MongoUrl == "" {
+		log.Fatal("Error: Missing MONGO_URL environment variable")
 	}
 }

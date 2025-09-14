@@ -7,6 +7,10 @@ import (
 	"Mrkonxyz/github.com/discord"
 	"Mrkonxyz/github.com/handler"
 	"Mrkonxyz/github.com/middlewere"
+	"Mrkonxyz/github.com/service"
+	"context"
+	"log"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,17 +18,43 @@ import (
 func main() {
 	cfg := config.LoadConfig(".")
 	cfg.Validate()
+
+	// Set a 10-second timeout for connecting
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Create a client
+	client, err := config.ConnectMongoDB(cfg)
+	if err != nil {
+		log.Fatal("Connection error:", err)
+	}
+	defer client.Disconnect(ctx)
+
 	apiService := api.NewApiService(&cfg)
-	bk := bitkub.NewBitkubService(apiService)
+	bk := bitkub.NewBitkubService(apiService, client)
 	ds := discord.NewDiscordService(apiService)
-	h := handler.NewHandler(bk, ds)
+
+	service := service.NewService(client, &cfg, ctx)
+
+	h := handler.NewHandler(bk, ds, service)
 
 	r := gin.Default()
 	r.Use()
-	r.GET("/", h.Health)
-	protected := r.Group("")
-	protected.Use(middlewere.AuthMiddleware(cfg))
-	protected.GET("/wallet", h.GetWallet)
-	protected.POST("/dca-bitcoin", h.DcaBTC)
+	r.GET("/health", h.Health)
+	// Public routes
+	user := r.Group("user")
+	{
+		user.POST("/", h.CreateUser)
+		user.GET("/:username", h.GetUserByUsername)
+	}
+
+	// private routes
+	private := r.Group("dca")
+	{
+		private.Use(middlewere.AuthMiddleware(cfg))
+		private.GET("/wallet", h.GetWallet)
+		private.POST("/dca-bitcoin", h.DcaBTC)
+	}
+
 	r.Run()
 }
