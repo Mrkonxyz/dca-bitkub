@@ -17,7 +17,7 @@ func main() {
 	// dependencies for dca
 	dcaRepo := repository.NewDcaRepository(cfg.DB)
 	dcaService := service.NewDcaService(dcaRepo)
-	apiService := utils.NewApiService(&cfg)
+	apiService := utils.NewApiService(cfg)
 	bkService := service.NewBitKubService(apiService)
 	dsService := service.NewDiscordService(apiService)
 	dcaHandler := handler.NewDcaHandler(dcaService, bkService, dsService)

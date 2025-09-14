@@ -14,10 +14,10 @@ import (
 )
 
 type ApiService struct {
-	Cfg *config.Config
+	Cfg config.Config
 }
 
-func NewApiService(cgf *config.Config) *ApiService {
+func NewApiService(cgf config.Config) *ApiService {
 	return &ApiService{Cfg: cgf}
 }
 func (a *ApiService) genSign(secret string, payloadString string) string {
