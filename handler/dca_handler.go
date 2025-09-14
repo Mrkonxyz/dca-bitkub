@@ -75,11 +75,6 @@ func (h *DcaHandler) Trigger(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	var req model.DcaRequest
-	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		return
-	}
 
 	dca, err := h.service.GetDca(c)
 	if err != nil {
@@ -129,7 +124,7 @@ func (h *DcaHandler) Trigger(c *gin.Context) {
 		# จำนวนเงิน %sบาท
 		# =====================
 		`,
-			today, utils.FormatMoney(res["THB_BTC"].Last), utils.FormatMoney(req.Amount))
+			today, utils.FormatMoney(res["THB_BTC"].Last), utils.FormatMoney(v.Amount))
 
 		_, err = h.DsService.SentMessage(message)
 
