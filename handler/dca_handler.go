@@ -1,10 +1,9 @@
 package handler
 
 import (
-	"Mrkonxyz/github.com/bitkub"
-	"Mrkonxyz/github.com/discord"
+	"Mrkonxyz/github.com/model"
 	"Mrkonxyz/github.com/service"
-	"Mrkonxyz/github.com/util"
+	"Mrkonxyz/github.com/utils"
 	"fmt"
 	"log"
 	"net/http"
@@ -13,47 +12,47 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Handler struct {
-	BkService *bitkub.Bitkub
-	DsService *discord.Discord
-	Service   *service.Service
+type DcaHandler struct {
+	service   *service.DcaService
+	BkService *service.BitKubService
+	DsService *service.DiscordService
 }
 
-func NewHandler(bkService *bitkub.Bitkub, dsService *discord.Discord, service *service.Service) *Handler {
-	return &Handler{BkService: bkService, DsService: dsService, Service: service}
+func NewDcaHandler(service *service.DcaService, bkService *service.BitKubService, dsService *service.DiscordService) *DcaHandler {
+	return &DcaHandler{service, bkService, dsService}
 }
 
-func (h *Handler) Health(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "service up."})
+func (h *DcaHandler) CreateDca(c *gin.Context) {
+	var req model.Dca
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.service.CreateDca(c, req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create dca"})
+		return
+	}
+	c.JSON(http.StatusCreated, req)
 }
 
-type DcaRequest struct {
-	Amount float64 `json:"amount"`
+func (h *DcaHandler) GetDca(c *gin.Context) {
+	dcas, err := h.service.GetDca(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch dca"})
+		return
+	}
+	c.JSON(http.StatusOK, dcas)
 }
 
-func getDay() (string, error) {
-	// Load the Bangkok timezone
-	bangkokTimeZone := time.FixedZone("UTC+7", 7*60*60)
-
-	// Get the current time in the Bangkok timezone
-	currentTime := time.Now().In(bangkokTimeZone)
-
-	year := currentTime.Year() + 543 // Convert AD to BE
-	month := currentTime.Month()
-	day := currentTime.Day()
-
-	// Log the date in Thai format
-	return fmt.Sprintf("วันที่ %d เดือน %d พ.ศ. %d เวลา %02d:%02d\n", day, month, year, currentTime.Hour(), currentTime.Minute()), nil
-}
-
-func (h *Handler) DcaBTC(c *gin.Context) {
+func (h *DcaHandler) Trigger(c *gin.Context) {
 	today, err := getDay()
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	var req DcaRequest
+	var req model.DcaRequest
 	if err := c.BindJSON(&req); err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -62,7 +61,7 @@ func (h *Handler) DcaBTC(c *gin.Context) {
 
 	buyRes, err := h.BkService.BuyBitCion(req.Amount)
 	if buyRes.Error != 0 || err != nil {
-		errorMessage, exists := util.ErrorMessages[buyRes.Error]
+		errorMessage, exists := utils.ErrorMessages[buyRes.Error]
 		if !exists {
 			errorMessage = err.Error()
 		}
@@ -101,7 +100,7 @@ func (h *Handler) DcaBTC(c *gin.Context) {
 		# จำนวนเงิน %sบาท
 		# =====================
 		`,
-		today, util.FormatMoney(res["THB_BTC"].Last), util.FormatMoney(req.Amount))
+		today, utils.FormatMoney(res["THB_BTC"].Last), utils.FormatMoney(req.Amount))
 
 	_, err = h.DsService.SentMessage(message)
 
@@ -114,11 +113,26 @@ func (h *Handler) DcaBTC(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "DCA BTC success ✅"})
 }
 
-func (h *Handler) GetWallet(c *gin.Context) {
+func (h *DcaHandler) GetWallet(c *gin.Context) {
 	res, err := h.BkService.GetWallet()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 
 	c.JSON(http.StatusOK, res)
+}
+
+func getDay() (string, error) {
+	// Load the Bangkok timezone
+	bangkokTimeZone := time.FixedZone("UTC+7", 7*60*60)
+
+	// Get the current time in the Bangkok timezone
+	currentTime := time.Now().In(bangkokTimeZone)
+
+	year := currentTime.Year() + 543 // Convert AD to BE
+	month := currentTime.Month()
+	day := currentTime.Day()
+
+	// Log the date in Thai format
+	return fmt.Sprintf("วันที่ %d เดือน %d พ.ศ. %d เวลา %02d:%02d\n", day, month, year, currentTime.Hour(), currentTime.Minute()), nil
 }

@@ -1,4 +1,4 @@
-package util
+package utils
 
 var ErrorMessages = map[int]string{
 	0:  "No error",

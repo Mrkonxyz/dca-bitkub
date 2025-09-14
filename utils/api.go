@@ -1,4 +1,4 @@
-package api
+package utils
 
 import (
 	"Mrkonxyz/github.com/config"
@@ -12,8 +12,6 @@ import (
 	"net/http"
 	"strings"
 )
-
-var BaseUrl = config.AppConfig.BaseUrl
 
 type ApiService struct {
 	Cfg *config.Config
@@ -34,7 +32,7 @@ func (a *ApiService) genSign(secret string, payloadString string) string {
 }
 func (a *ApiService) getTimestamp() string {
 	path := "/api/v3/servertime"
-	url := fmt.Sprintf("%s%s", config.AppConfig.BaseUrl, path)
+	url := fmt.Sprintf("%s%s", a.Cfg.BaseUrl, path)
 	req, err := http.Get(url)
 	if err != nil {
 		log.Fatalf("Error making HTTP request: %v", err)
@@ -105,7 +103,7 @@ func (a *ApiService) PostWithSig(path string, b *bytes.Buffer) (response []byte,
 	// Optionally set headers
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("X-BTK-APIKEY", config.AppConfig.ApiKey)
+	req.Header.Set("X-BTK-APIKEY", a.Cfg.ApiKey)
 	req.Header.Set("X-BTK-TIMESTAMP", ts)
 	req.Header.Set("X-BTK-SIGN", sig)
 

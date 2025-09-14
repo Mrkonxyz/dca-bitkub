@@ -1,11 +1,12 @@
-package bitkub
+package model
 
-// sym string The symbol you want to trade (e.g. btc_thb).
-// amt float Amount you want to spend with no trailing zero (e.g. 1000.00 is invalid, 1000 is ok)
-// rat float Rate you want for the order with no trailing zero (e.g. 1000.00 is invalid, 1000 is ok)
-// typ string Order type: limit or market (for market order, please specify rat as 0)
-// client_id string your id for reference ( not required )
-// post_only bool Postonly flag: true or false ( not required )
+type Dca struct {
+	ID     string  `json:"id" bson:"_id,unique"`
+	UserID string  `json:"user_id" bson:"user_id"`
+	Amount float64 `json:"amount" bson:"amount"`
+	Symbol string  `json:"symbol" bson:"symbol"`
+}
+
 type BuyBitCionRequest struct {
 	Symbol    string  `json:"sym"`
 	Amount    float64 `json:"amt"`
@@ -51,4 +52,8 @@ type MarketDetails struct {
 	Change        float64 `json:"change"`
 	PrevClose     float64 `json:"prevClose"`
 	PrevOpen      float64 `json:"prevOpen"`
+}
+
+type DcaRequest struct {
+	Amount float64 `json:"amount"`
 }
