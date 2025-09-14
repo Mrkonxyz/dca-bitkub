@@ -19,20 +19,7 @@ FROM alpine:latest
 
 # Set the Current Working Directory inside the container
 WORKDIR /root/
-# Define the build argument
-ARG BASE_URL
-ARG API_KEY
-ARG API_SECRET
-ARG SECRET
-ARG DISCORD_HOOK
 
-# Write the environment variables to a single file
-RUN echo "BASE_URL=${BASE_URL}" > /root/app.env && \
-    echo "API_KEY=${API_KEY}" >> /root/app.env && \
-    echo "SECRET=${SECRET}" >> /root/app.env && \
-    echo "DISCORD_HOOK=${DISCORD_HOOK}" >> /root/app.env && \
-    echo "API_SECRET=${API_SECRET}" >> /root/app.env
-# Copy the Go binary from the builder stage
 COPY --from=builder /app/myapp .
 # Expose the port the app will run on
 EXPOSE 8080
