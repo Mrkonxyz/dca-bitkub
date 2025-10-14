@@ -82,25 +82,26 @@ func (bk *BitKubService) GetWallet(ctx context.Context) (response *model.WalletI
 			var toThb string
 			if price.Last == 0 {
 				toThb = utils.FormatMoney(v)
+				sum += v
 			} else {
 				toThb = utils.FormatMoney(v * price.Last)
+				sum += v * price.Last
 			}
 			responseTemp = append(responseTemp, model.Wallet{
 				Symbol:    k,
 				Amount:    v,
 				AmountTHB: toThb,
 			})
-			sum += v
+
 		}
 	}
 
 	principle, _ := bk.topUpRepository.SumAmount(ctx)
-	// sum all topup from db
-	profit := 0.0
+	profit := sum - principle
 	response = &model.WalletInfoResponse{
 		Wallet:    responseTemp,
-		Principle: principle,
-		Profit:    profit,
+		Principle: utils.FormatMoney(principle),
+		Profit:    utils.FormatMoney(profit),
 	}
 
 	return response, nil

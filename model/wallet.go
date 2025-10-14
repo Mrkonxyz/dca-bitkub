@@ -8,8 +8,8 @@ type Wallet struct {
 
 type WalletInfoResponse struct {
 	Wallet    []Wallet `json:"wallet"`
-	Principle float64  `json:"principle"`
-	Profit    float64  `json:"profit"`
+	Principle string   `json:"principle"`
+	Profit    string   `json:"profit"`
 }
 
 type WalletResponse struct {

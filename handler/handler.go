@@ -9,7 +9,7 @@ type Handler struct {
 
 func NewHandler(dcaService *service.DcaService, bkService *service.BitKubService, dsService *service.DiscordService, historyService *service.HistoryService) *Handler {
 	return &Handler{
-		Dca:     NewDcaHandler(dcaService, bkService, dsService),
+		Dca:     NewDcaHandler(dcaService, bkService, dsService, historyService),
 		History: NewHistoryHandler(historyService),
 	}
 }

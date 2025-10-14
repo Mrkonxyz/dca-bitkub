@@ -13,13 +13,14 @@ import (
 )
 
 type DcaHandler struct {
-	DcaService *service.DcaService
-	BkService  *service.BitKubService
-	DsService  *service.DiscordService
+	DcaService     *service.DcaService
+	BkService      *service.BitKubService
+	DsService      *service.DiscordService
+	HistoryService *service.HistoryService
 }
 
-func NewDcaHandler(service *service.DcaService, bkService *service.BitKubService, dsService *service.DiscordService) *DcaHandler {
-	return &DcaHandler{service, bkService, dsService}
+func NewDcaHandler(service *service.DcaService, bkService *service.BitKubService, dsService *service.DiscordService, historyService *service.HistoryService) *DcaHandler {
+	return &DcaHandler{service, bkService, dsService, historyService}
 }
 
 func (h *DcaHandler) CreateDca(c *gin.Context) {
@@ -70,6 +71,9 @@ func (h *DcaHandler) UpdateDca(c *gin.Context) {
 }
 
 func (h *DcaHandler) Trigger(c *gin.Context) {
+
+	h.HistoryService.SyncDepositHistory(c)
+
 	today, err := getDay()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
