@@ -13,9 +13,9 @@ import (
 )
 
 type DcaHandler struct {
-	service   *service.DcaService
-	BkService *service.BitKubService
-	DsService *service.DiscordService
+	DcaService *service.DcaService
+	BkService  *service.BitKubService
+	DsService  *service.DiscordService
 }
 
 func NewDcaHandler(service *service.DcaService, bkService *service.BitKubService, dsService *service.DiscordService) *DcaHandler {
@@ -29,7 +29,7 @@ func (h *DcaHandler) CreateDca(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.CreateDca(c, req); err != nil {
+	if err := h.DcaService.CreateDca(c, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create dca"})
 		return
 	}
@@ -37,7 +37,7 @@ func (h *DcaHandler) CreateDca(c *gin.Context) {
 }
 
 func (h *DcaHandler) GetAll(c *gin.Context) {
-	dcas, err := h.service.GetDca(c)
+	dcas, err := h.DcaService.GetDca(c)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -48,7 +48,7 @@ func (h *DcaHandler) GetAll(c *gin.Context) {
 func (h *DcaHandler) RemoveDca(c *gin.Context) {
 	id := c.Param("id")
 	log.Println("Delete DCA ID:", id)
-	if err := h.service.RemoveDca(c, id); err != nil {
+	if err := h.DcaService.RemoveDca(c, id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -62,7 +62,7 @@ func (h *DcaHandler) UpdateDca(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.UpdateDca(c, req); err != nil {
+	if err := h.DcaService.UpdateDca(c, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update dca"})
 		return
 	}
@@ -76,7 +76,7 @@ func (h *DcaHandler) Trigger(c *gin.Context) {
 		return
 	}
 
-	dca, err := h.service.GetDca(c)
+	dca, err := h.DcaService.GetDca(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -139,7 +139,8 @@ func (h *DcaHandler) Trigger(c *gin.Context) {
 }
 
 func (h *DcaHandler) GetWallet(c *gin.Context) {
-	res, err := h.BkService.GetWallet()
+	ctx := c.Request.Context()
+	res, err := h.BkService.GetWallet(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}

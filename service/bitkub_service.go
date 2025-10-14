@@ -2,19 +2,23 @@ package service
 
 import (
 	"Mrkonxyz/github.com/model"
+	"Mrkonxyz/github.com/repository"
 	"Mrkonxyz/github.com/utils"
 	"bytes"
+	"context"
 	"encoding/json"
 	"math"
 )
 
 type BitKubService struct {
-	ApiService *utils.ApiService
+	topUpRepository *repository.TopUpRepository
+	ApiService      *utils.ApiService
 }
 
-func NewBitKubService(apiService *utils.ApiService) *BitKubService {
+func NewBitKubService(apiService *utils.ApiService, topUpRepository *repository.TopUpRepository) *BitKubService {
 	return &BitKubService{
-		ApiService: apiService,
+		ApiService:      apiService,
+		topUpRepository: topUpRepository,
 	}
 }
 
@@ -30,7 +34,7 @@ func (bk *BitKubService) BuyCrypto(amount float64, symbol string) (response *mod
 	if err != nil {
 		return nil, err
 	}
-	res, err := bk.ApiService.PostWithSig(path, bytes.NewBuffer(jsonData))
+	res, err := bk.ApiService.PostWithSig(path, bytes.NewBuffer(jsonData), nil)
 
 	if err != nil {
 		return nil, err
@@ -58,10 +62,10 @@ func (bk *BitKubService) RoundToTwoDecimals(value float64) float64 {
 	return math.Round(value*100) / 100
 }
 
-func (bk *BitKubService) GetWallet() (response []model.GeWalletResponse, err error) {
+func (bk *BitKubService) GetWallet(ctx context.Context) (response *model.WalletInfoResponse, err error) {
 	path := "/api/v3/market/wallet"
 
-	res, err := bk.ApiService.PostWithSig(path, nil)
+	res, err := bk.ApiService.PostWithSig(path, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -70,6 +74,8 @@ func (bk *BitKubService) GetWallet() (response []model.GeWalletResponse, err err
 		return nil, err
 	}
 	prices, _ := bk.GetPrice("")
+	var responseTemp []model.Wallet
+	sum := 0.0
 	for k, v := range temp.Result {
 		if v > 0 {
 			price := prices["THB_"+k]
@@ -79,13 +85,43 @@ func (bk *BitKubService) GetWallet() (response []model.GeWalletResponse, err err
 			} else {
 				toThb = utils.FormatMoney(v * price.Last)
 			}
-			response = append(response, model.GeWalletResponse{
+			responseTemp = append(responseTemp, model.Wallet{
 				Symbol:    k,
 				Amount:    v,
 				AmountTHB: toThb,
 			})
+			sum += v
 		}
 	}
 
+	principle, _ := bk.topUpRepository.SumAmount(ctx)
+	// sum all topup from db
+	profit := 0.0
+	response = &model.WalletInfoResponse{
+		Wallet:    responseTemp,
+		Principle: principle,
+		Profit:    profit,
+	}
+
+	return response, nil
+}
+
+func (bk *BitKubService) DepositHistory() (response *model.BaseResultPage[model.DepositHistoryResponse], err error) {
+	path := "/api/v3/fiat/deposit-history"
+
+	// Create a map to hold the request body parameters
+	params := make(map[string]string)
+
+	params["p"] = "1"
+
+	res, err := bk.ApiService.PostWithSig(path, nil, params)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if err = json.Unmarshal(res, &response); err != nil {
+		return nil, err
+	}
 	return response, nil
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter(cfg config.Config, dcaHandler *handler.DcaHandler) *gin.Engine {
+func SetupRouter(cfg config.Config, handler *handler.Handler) *gin.Engine {
 	r := gin.Default()
 	// public routes
 	r.GET("/health", func(c *gin.Context) {
@@ -18,6 +18,7 @@ func SetupRouter(cfg config.Config, dcaHandler *handler.DcaHandler) *gin.Engine 
 	})
 	// private routes
 	r.Use(middlewere.AuthMiddleware(cfg))
-	DcaRoutes(r.Group(""), dcaHandler, cfg)
+	DcaRoutes(r.Group(""), handler.Dca, cfg)
+	HistoryRoutes(r.Group(""), handler.History, cfg)
 	return r
 }

@@ -10,6 +10,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -77,29 +78,56 @@ func (a *ApiService) Post(url string, body *bytes.Buffer) (res []byte, err error
 	return a.readResponse(response.Body), nil
 }
 
-func (a *ApiService) PostWithSig(path string, b *bytes.Buffer) (response []byte, err error) {
+func genQueryParam(queryParams map[string]string) string {
+	// Create a new url.Values object. It's the standard way to hold query params.
+	params := url.Values{}
+
+	// Loop through the map and add each key-value pair.
+	// The .Set() method handles the assignment.
+	for key, value := range queryParams {
+		params.Set(key, value)
+	}
+
+	// .Encode() automatically handles URL encoding (e.g., spaces become %20)
+	// and formats the string as "key1=value1&key2=value2".
+	encodedParams := params.Encode()
+
+	if encodedParams == "" {
+		return ""
+	}
+
+	return "?" + encodedParams
+}
+
+func (a *ApiService) PostWithSig(path string, b *bytes.Buffer, params map[string]string) (response []byte, err error) {
 	ts := a.getTimestamp()
 	url := a.Cfg.BaseUrl + path
+
+	var payload []string
+	payload = append(payload, ts)
+	payload = append(payload, "POST")
+	payload = append(payload, path)
+	var queryParam = ""
+	if params != nil {
+		queryParam = genQueryParam(params)
+		payload = append(payload, queryParam)
+	}
+	if b != nil {
+		payload = append(payload, b.String())
+	}
+	payloadStr := strings.Join(payload, "")
+	sig := a.genSign(a.Cfg.ApiSecret, payloadStr)
 
 	// Create a new GET request
 	var body1 io.Reader = nil
 	if b != nil {
 		body1 = b
 	}
-	req, err := http.NewRequest("POST", url, body1)
+
+	req, err := http.NewRequest("POST", url+queryParam, body1)
 	if err != nil {
 		log.Printf("Error creating request: %v \n", err)
 	}
-
-	var payload []string
-	payload = append(payload, ts)
-	payload = append(payload, "POST")
-	payload = append(payload, path)
-	if b != nil {
-		payload = append(payload, b.String())
-	}
-	payloadStr := strings.Join(payload, "")
-	sig := a.genSign(a.Cfg.ApiSecret, payloadStr)
 	// Optionally set headers
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
